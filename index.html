@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificación de Viajes</title>
+</head>
+<body>
+    <h1>Planificación de Viajes de Autocares</h1>
+    <form id="planificacionForm">
+        <h2>Datos de Conductores</h2>
+        <label for="numConductores">Número de Conductores:</label>
+        <input type="number" id="numConductores" name="numConductores" required><br><br>
+
+        <h2>Datos de Autocares</h2>
+        <label for="numAutocares">Número de Autocares:</label>
+        <input type="number" id="numAutocares" name="numAutocares" required><br><br>
+
+        <h2>Datos de Viajes</h2>
+        <label for="numViajes">Número de Viajes:</label>
+        <input type="number" id="numViajes" name="numViajes" required><br><br>
+        <div id="viajesContainer"></div>
+        <button type="button" onclick="agregarViajes()">Agregar Viajes</button><br><br>
+
+        <button type="button" onclick="planificarViajes()">Planificar</button>
+    </form>
+
+    <h2>Resultados</h2>
+    <pre id="resultados"></pre>
+
+    <script>
+        function agregarViajes() {
+            const numViajes = document.getElementById('numViajes').value;
+            const viajesContainer = document.getElementById('viajesContainer');
+            viajesContainer.innerHTML = '';
+
+            for (let i = 0; i < numViajes; i++) {
+                const label = document.createElement('label');
+                label.textContent = `Duración del Viaje ${i + 1} (horas):`;
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.id = `duracionViaje${i}`;
+                input.name = `duracionViaje${i}`;
+                input.required = true;
+                viajesContainer.appendChild(label);
+                viajesContainer.appendChild(input);
+                viajesContainer.appendChild(document.createElement('br'));
+            }
+        }
+
+        function planificarViajes() {
+            const numConductores = document.getElementById('numConductores').value;
+            const numAutocares = document.getElementById('numAutocares').value;
+            const numViajes = document.getElementById('numViajes').value;
+
+            // Crear listas de conductores y autocares
+            const conductores = Array.from({ length: numConductores }, (_, i) => ({ id: i, horasConducidas: 0, descansos: 0 }));
+            const autocares = Array.from({ length: numAutocares }, (_, i) => ({ id: i, viajes: [] }));
+            const viajes = Array.from({ length: numViajes }, (_, i) => ({
+                id: i,
+                duracion: parseInt(document.getElementById(`duracionViaje${i}`).value)
+            }));
+
+            // Algoritmo de planificación
+            for (const viaje of viajes) {
+                const conductor = conductores.shift();
+                const autocar = autocares.shift();
+
+                if (conductor.horasConducidas + viaje.duracion <= 9) {
+                    conductor.horasConducidas += viaje.duracion;
+                    autocar.viajes.push(viaje);
+                } else {
+                    conductor.descansos += 1;
+                    conductor.horasConducidas = viaje.duracion;
+                    autocar.viajes.push(viaje);
+                }
+
+                conductores.push(conductor);
+                autocares.push(autocar);
+            }
+
+            // Mostrar resultados
+            let resultados = '';
+            for (const autocar of autocares) {
+                resultados += `Autocar ${autocar.id}:\n`;
+                for (const viaje of autocar.viajes) {
+                    resultados += `  Viaje ${viaje.id} - Duración: ${viaje.duracion} horas\n`;
+                }
+            }
+            for (const conductor of conductores) {
+                resultados += `Conductor ${conductor.id}: Horas conducidas: ${conductor.horasConducidas}, Descansos: ${conductor.descansos}\n`;
+            }
+
+            document.getElementById('resultados').textContent = resultados;
+        }
+    </script>
+</body>
+</html>
